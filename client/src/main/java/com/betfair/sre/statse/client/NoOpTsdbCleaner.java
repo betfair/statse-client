@@ -20,7 +20,8 @@ package com.betfair.sre.statse.client;
  * User: mcintyret2
  * Date: 19/08/2013
  */
-public class NoOpTsdbCleaner implements TsdbCleaner {
+public enum NoOpTsdbCleaner implements TsdbCleaner {
+    INSTANCE;
 
     @Override
     public String clean(String value) {

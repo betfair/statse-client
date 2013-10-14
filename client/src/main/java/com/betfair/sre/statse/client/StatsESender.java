@@ -40,7 +40,7 @@ public class StatsESender {
 
     private static final int DEFAULT_QUEUE_SIZE = 1000;
 
-    private TsdbCleaner cleaner;
+    private TsdbCleaner cleaner = NoOpTsdbCleaner.INSTANCE;
 
     private int queueSize = DEFAULT_QUEUE_SIZE;
 
@@ -180,5 +180,21 @@ public class StatsESender {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        StatsESender sender = new StatsESender();
+        sender.setEnabled(true);
+        sender.setAgentAddress("tcp://localhost:14444");
+        sender.setQueueSize(50);
+
+        sender.start();
+
+        while (true) {
+            System.out.println("Sending message");
+            sender.sendMessage(sender.newMessageForMetric("some metric").time(12345D));
+
+            Thread.sleep(1000);
+        }
     }
 }
