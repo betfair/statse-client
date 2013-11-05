@@ -40,7 +40,7 @@ public class StatsESender {
 
     private static final int DEFAULT_QUEUE_SIZE = 1000;
 
-    private TsdbCleaner cleaner = NoOpTsdbCleaner.INSTANCE;
+    private TsdbCleaner cleaner = new NoOpTsdbCleaner();
 
     private int queueSize = DEFAULT_QUEUE_SIZE;
 
