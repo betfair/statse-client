@@ -1,8 +1,19 @@
 language: java
+
 jdk:
   - oraclejdk7
   - openjdk6
   - openjdk7
+
+env:
+  global:
+    - SONATYPE_USERNAME=mcintyret2
+    - secure: "secure: SiUJVKV4yfWHf+7DvqYCGK4uUSa5mJA1mt5E989HGxZiCV5h7yuiIdDEzE43twgNz+UM0LKGQABBWgzuQiHqv/RHaIDLlqJC0iPrImpVqIsGv8ESCN/0bG48FQFVH2y5wG6DqXyhAaacqoNTbvngxqd3OS1YXeP7vBl1lBjUcmk="
+
+after_success:
+  - python addServer.py
+  - mvn clean deploy --settings ~/.m2/mySettings.xml
+
 notifications:
   email:
     recipients:
