@@ -22,6 +22,9 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.testng.annotations.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -59,7 +62,7 @@ public class StatsEMsgBuilderTest {
             .time(12.34D)
             .error(false);
 
-        assertEquals("EVENT|cleaned.my.metric|op=cleaned.myop|time=12.34 err=false", msg.getBody());
+        assertEquals("EVENT|cleaned.my.metric|cleaned.op=cleaned.myop|time=12.34 err=false", msg.getBody());
         assertTrue(msg.getHeader().startsWith("2 13"));
         assertEquals(15, msg.getHeader().length());
     }
@@ -74,12 +77,50 @@ public class StatsEMsgBuilderTest {
         assertEquals(15, msg.getHeader().length());
     }
 
+    public void shouldFormatMsgSingleTag() {
+        StatsEMsgBuilder msg = new StatsEMsgBuilder("my.metric", mockSender, mockCleaner)
+            .withTag("foo", "bar")
+            .time(12.34D)
+            .error(false);
+
+        assertEquals("EVENT|cleaned.my.metric|cleaned.foo=cleaned.bar|time=12.34 err=false", msg.getBody());
+        assertTrue(msg.getHeader().startsWith("2 13"));
+        assertEquals(15, msg.getHeader().length());
+    }
+
+    public void shouldFormatMsgMultipleTags() {
+        StatsEMsgBuilder msg = new StatsEMsgBuilder("my.metric", mockSender, mockCleaner)
+            .withTag("foo", "bar")
+            .withTag("baz", "bat")
+            .time(12.34D)
+            .error(false);
+
+        assertEquals("EVENT|cleaned.my.metric|cleaned.baz=cleaned.bat cleaned.foo=cleaned.bar|time=12.34 err=false", msg.getBody());
+        assertTrue(msg.getHeader().startsWith("2 13"));
+        assertEquals(15, msg.getHeader().length());
+    }
+
+    public void shouldFormatMsgMultipleTags2() {
+        Map<String, String> tags = new HashMap<String, String>();
+        tags.put("foo", "bar");
+        tags.put("baz", "bat");
+
+        StatsEMsgBuilder msg = new StatsEMsgBuilder("my.metric", mockSender, mockCleaner)
+            .withTags(tags)
+            .time(12.34D)
+            .error(false);
+
+        assertEquals("EVENT|cleaned.my.metric|cleaned.baz=cleaned.bat cleaned.foo=cleaned.bar|time=12.34 err=false", msg.getBody());
+        assertTrue(msg.getHeader().startsWith("2 13"));
+        assertEquals(15, msg.getHeader().length());
+    }
+
     public void shouldFormatMsgNoValue() {
         StatsEMsgBuilder msg = new StatsEMsgBuilder("my.metric", mockSender, mockCleaner)
             .operation("myop")
             .error(false);
 
-        assertEquals("EVENT|cleaned.my.metric|op=cleaned.myop|err=false", msg.getBody());
+        assertEquals("EVENT|cleaned.my.metric|cleaned.op=cleaned.myop|err=false", msg.getBody());
         assertTrue(msg.getHeader().startsWith("2 13"));
         assertEquals(15, msg.getHeader().length());
     }
@@ -91,7 +132,7 @@ public class StatsEMsgBuilderTest {
             .size(18.56)
             .error(false);
 
-        assertEquals("EVENT|cleaned.my.metric|op=cleaned.myop|time=12.34 size=18.56 err=false", msg.getBody());
+        assertEquals("EVENT|cleaned.my.metric|cleaned.op=cleaned.myop|time=12.34 size=18.56 err=false", msg.getBody());
         assertTrue(msg.getHeader().startsWith("2 13"));
         assertEquals(15, msg.getHeader().length());
     }
@@ -104,7 +145,7 @@ public class StatsEMsgBuilderTest {
             .timestamp(12345678L)
             .error(false);
 
-        assertEquals("EVENT|cleaned.my.metric|op=cleaned.myop|time=12.34 size=18.56 err=false", msg.getBody());
+        assertEquals("EVENT|cleaned.my.metric|cleaned.op=cleaned.myop|time=12.34 size=18.56 err=false", msg.getBody());
         assertEquals("2 12345678", msg.getHeader());
 
     }
@@ -118,7 +159,7 @@ public class StatsEMsgBuilderTest {
             .sampleRate(0.75F)
             .error(false);
 
-        assertEquals("EVENT|cleaned.my.metric|op=cleaned.myop|time=12.34 size=18.56 err=false", msg.getBody());
+        assertEquals("EVENT|cleaned.my.metric|cleaned.op=cleaned.myop|time=12.34 size=18.56 err=false", msg.getBody());
         assertEquals("2 12345678 0.75", msg.getHeader());
 
     }
@@ -140,7 +181,7 @@ public class StatsEMsgBuilderTest {
             .time(12.34D)
             .size(18.56);
 
-        assertEquals("EVENT|cleaned.my.metric|op=cleaned.myop|time=12.34 size=18.56 err=false", msg.getBody());
+        assertEquals("EVENT|cleaned.my.metric|cleaned.op=cleaned.myop|time=12.34 size=18.56 err=false", msg.getBody());
         assertTrue(msg.getHeader().startsWith("2 13"));
         assertEquals(15, msg.getHeader().length());
     }
