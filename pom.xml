@@ -4,7 +4,7 @@
 
     <groupId>com.betfair.sre</groupId>
     <artifactId>statse-client-parent</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1-SNAPSHOT</version>
     <modules>
         <module>client</module>
         <module>test-agent</module>
