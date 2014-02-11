@@ -17,9 +17,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.jeromq</groupId>
+            <groupId>org.zeromq</groupId>
             <artifactId>jeromq</artifactId>
-            <version>0.2.0</version>
+            <version>0.3.3</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
