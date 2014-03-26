@@ -67,6 +67,11 @@
         <url>https://travis-ci.org/betfair/statse-client</url>
     </ciManagement>
 
+    <properties>
+        <jeromq.version>0.3.3</jeromq.version>
+        <slf4j.version>1.7.6</slf4j.version>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -74,8 +79,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.0</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -99,5 +104,20 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.zeromq</groupId>
+                <artifactId>jeromq</artifactId>
+                <version>${jeromq.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 </project>

@@ -1,6 +1,6 @@
 package com.betfair.sre.statse.testagent;
 
-import org.jeromq.ZMQ;
+import org.zeromq.ZMQ;
 
 /**
  * User: mcintyret2
@@ -19,7 +19,7 @@ public class RunTestAgent {
         ZMQ.Socket subscriber = ctx.socket(ZMQ.SUB);
 
         subscriber.bind("tcp://127.0.0.1:" + port);
-        subscriber.subscribe("");
+        subscriber.subscribe("".getBytes());
         System.out.println("Connected");
 
         String line;

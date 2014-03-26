@@ -16,17 +16,18 @@ limitations under the License.
 
 package com.betfair.sre.statse.client;
 
-import org.jeromq.ZMQ;
-import org.jeromq.ZMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
+import org.zeromq.ZMQ;
+import org.zeromq.ZMsg;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -47,10 +48,10 @@ public class StatsESender {
     private String agentAddress = "NO DEFAULT";
 
     private boolean enabled;
-    private volatile boolean running;
+    private final AtomicBoolean running = new AtomicBoolean();
     private Thread senderThread;
     private ZMQ.Context ctx;
-    private ZMQ.Socket publisher;
+    ZMQ.Socket publisher;
 
     private AtomicLong sentCount = new AtomicLong();
     private AtomicLong droppedCount = new AtomicLong();
@@ -72,10 +73,12 @@ public class StatsESender {
     @PostConstruct
     public void start() {
         if (enabled) {
-            events = new ArrayBlockingQueue<StatsEMsgBuilder>(queueSize);
+            if (events == null) {
+                events = new ArrayBlockingQueue<>(queueSize);
+            }
             startZeroMQ();
 
-            running = true;
+            running.set(true);
             senderThread = new Thread(new Runnable() {
 
                 @Override
@@ -89,8 +92,7 @@ public class StatsESender {
         }
     }
 
-    // visible for testing only
-    protected void startZeroMQ() {
+    private void startZeroMQ() {
         // Prepare our context and publisher
         LOG.info("Starting 0MQ");
         ctx = ZMQ.context(1);
@@ -102,8 +104,7 @@ public class StatsESender {
 
     @PreDestroy
     public void stop() {
-        if (enabled) {
-            running = false;
+        if (running.getAndSet(false)) {
             senderThread.interrupt();
             try {
                 LOG.info("Waiting for sender thread to stop", agentAddress);
@@ -116,8 +117,7 @@ public class StatsESender {
         }
     }
 
-    // visible for testing only
-    protected void stopZeroMQ() {
+    void stopZeroMQ() {
         LOG.info("Disconnecting from agent {}", agentAddress);
         publisher.close();
         LOG.info("Stopping 0MQ");
@@ -125,7 +125,7 @@ public class StatsESender {
     }
 
     private void processEvents() {
-        while (running) {
+        while (running.get()) {
             try {
                 final StatsEMsgBuilder msg = events.take();
                 final ZMsg zmsg = makeZMsg();
@@ -134,6 +134,21 @@ public class StatsESender {
                 zmsg.send(publisher);
             } catch (InterruptedException e) {
                 LOG.warn("StatsE sender interrupted.");
+            } catch (Throwable t) {
+                LOG.error("Internal StatsE/ZMQ error", t);
+                stopZeroMQ();
+                new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            senderThread.join();
+                        } catch (InterruptedException e) {
+                            Thread.interrupted();
+                        }
+                        StatsESender.this.start();
+                    }
+                }.start();
+                return;
             }
         }
     }
@@ -163,7 +178,7 @@ public class StatsESender {
     }
 
     boolean isRunning() {
-        return running;
+        return running.get();
     }
 
     public void setQueueSize(int queueSize) {
@@ -185,16 +200,19 @@ public class StatsESender {
     public static void main(String[] args) throws InterruptedException {
         StatsESender sender = new StatsESender();
         sender.setEnabled(true);
-        sender.setAgentAddress("tcp://localhost:14444");
+        sender.setAgentAddress("tcp://127.0.0.1:14444");
         sender.setQueueSize(50);
 
         sender.start();
 
-        while (true) {
+        int count = 10;
+        while (count-- > 0) {
             System.out.println("Sending message");
             sender.sendMessage(sender.newMessageForMetric("some metric").time(12345D));
 
             Thread.sleep(1000);
         }
+        sender.stop();
+        System.out.println("DONE");
     }
 }
